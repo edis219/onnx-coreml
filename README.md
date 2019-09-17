@@ -10,22 +10,23 @@ There's a comprehensive [Tutorial](https://github.com/onnx/tutorials/tree/master
 ## [New] Beta onnx-coreml converter with Core ML 3
 
 To try out the new beta converter with CoreML 3 (>= iOS 13, >= macOS 15), 
-install coremltools 3.0b3 and coremltools 1.0b2
+install coremltools 3.0b6 and coremltools 1.0b3
 
 ```shell
-pip install coremltools==3.0b3
-pip install onnx-coreml==1.0b2
+pip install coremltools==3.0b6
+pip install onnx-coreml==1.0b3
 ```
 
-There is a new flag `disable_coreml_rank5_mapping` which should be set to true to utilize 
-the Core ML 3 specification.
+In beta 3, the flag `disable_coreml_rank5_mapping` (which was part of beta 2) has been removed and instead replaced by 
+the generic argument `target_ios` which can be used to target different versions of CoreML/iOS.   
 
+`target_ios` takes a string specifying target deployment iOS version e.g. '11.2', '12' and '13'.  
+By default, the converter uses the value of '12'. 
 
 For example:
 ```python
 from onnx_coreml import convert
-
-ml_model = convert(model='my_model.onnx', disable_coreml_rank5_mapping=True)
+ml_model = convert(model='my_model.onnx', target_ios='13') # to use CoreML 3
 ```
 
 ## Installation
@@ -80,7 +81,8 @@ def convert(model,
             predicted_feature_name='classLabel',
             add_custom_layers = False,
             custom_conversion_functions = {},
-	      disable_coreml_rank5_mapping=False)
+            target_ios='12'
+            )
 ```
 
 The function returns a coreml model instance that can be saved to a .mlmodel file, e.g.: 
@@ -159,18 +161,24 @@ __custom_conversion_fuctions__: dict (str: function)
         Examples: https://github.com/onnx/onnx-coreml/blob/master/tests/custom_layers_test.py#L43
 
 __onnx_coreml_input_shape_map__: dict (str: List[int])  
-    (Optional) A dictionary with keys corresponding to the model input names. Values are a list of integers that specify
+    (Optional)  
+    (only used if `target_ios` version is less than '13')   
+    A dictionary with keys corresponding to the model input names. Values are a list of integers that specify
     how the shape of the input is mapped to CoreML. Convention used for CoreML shapes is:  
     0: Sequence, 1: Batch, 2: channel, 3: height, 4: width.  
     For example, an input of rank 2 could be mapped as [3,4] (i.e. H,W) or [1,2] (i.e. B,C) etc.  
 
-__disable_coreml_rank5_mapping__: bool  
-	  If True, then it disables the "RANK5_ARRAY_MAPPING" or enables the "EXACT_ARRAY_MAPPING"
-        option in CoreML (https://github.com/apple/coremltools/blob/655b3be5cc0d42c3c4fa49f0f0e4a93a26b3e492/mlmodel/format/NeuralNetwork.proto#L67)
-        Thus, no longer, onnx tensors are forced to map to rank 5 CoreML tensors.
-        With this flag on, a rank r ONNX tensor, (1<=r<=5), will map to a rank r tensor in CoreML as well.
-        This flag must be on to utilize any of the new layers added in CoreML 3 (i.e. specification version 4, iOS13)
-
+__target_ios__: str  
+      Target Deployment iOS version (default: '12')  
+      Supported values: '11.2', '12', '13'        
+      CoreML model produced by the converter will be compatible with the iOS version specified in this argument.
+      e.g. if `target_ios` = '12', the converter would only utilize CoreML features released till iOS12 
+      (equivalently macOS 10.14, watchOS 5 etc).  
+      Release notes:  
+      * iOS 11 / CoreML 1: https://github.com/apple/coremltools/releases/tag/v0.8  
+      * iOS 12 / CoreML 2: https://github.com/apple/coremltools/releases/tag/v2.0  
+      * iOS 13 / CoreML 3: https://github.com/apple/coremltools/releases/tag/v3.0-beta
+      
 ### Returns
 __model__: A coreml model.
 
