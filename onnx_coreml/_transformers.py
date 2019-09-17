@@ -761,7 +761,6 @@ class ConstantRemover(object):
                     output = np.squeeze(x, axis = tuple(axes)) 
                 transformation_performed = True
             elif node.op_type == 'Gemm':
-                print("Constant remover on Gemm : %s" % node.name)
                 alpha = node.attrs.get('alpha', 1.0)
                 beta = node.attrs.get('beta', 1.0)
                 transA = node.attrs.get('transA', False)

@@ -677,7 +677,7 @@ def _convert_gemm(builder, node, graph, err):
     if A in node.input_tensors:
         A_tensor = node.input_tensors[A]
         builder.add_load_constant_nd(
-            name=node.name + "_const_" + A,
+            name=node.name + A + "_const",
             output_name='const_' + A,
             constant_value=A_tensor,
             shape=A_tensor.shape
